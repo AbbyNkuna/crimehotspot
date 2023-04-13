@@ -3,6 +3,9 @@ package com.example.crimehotspotapp.Model;
 public class User {
     private String Name,Surname,Phone;
 
+    public User() {
+    }
+
     public User(String name, String surname, String phone) {
         Name = name;
         Surname = surname;
