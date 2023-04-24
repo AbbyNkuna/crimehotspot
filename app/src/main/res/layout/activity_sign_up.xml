@@ -51,6 +51,7 @@
                     android:layout_width="match_parent"
                     android:inputType="textPersonName"
                     android:textSize="12dp"
+                    android:id="@+id/Name"
                     android:fontFamily="@font/alata"
                     android:layout_height="wrap_content"
                     android:hint="Enter your First Name"
@@ -70,6 +71,7 @@
                     android:layout_width="match_parent"
                     android:inputType="textPersonName"
                     android:textSize="12dp"
+                    android:id="@+id/Surname"
                     android:fontFamily="@font/alata"
                     android:layout_height="wrap_content"
                     android:hint="Enter your Last Name"
@@ -77,7 +79,28 @@
             </com.google.android.material.textfield.TextInputLayout>
 
 
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                app:boxBackgroundColor="#fff"
+                android:layout_margin="5dp"
+                app:endIconMode="clear_text"
+                app:startIconTint="#F000"
+                app:counterMaxLength="10"
+                android:fontFamily="@font/alata"
+                app:startIconDrawable="@drawable/baseline_contact_phone_24"
+                android:layout_height="wrap_content">
 
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:inputType="phone"
+                    android:textSize="12dp"
+                    android:id="@+id/Phone"
+                    android:maxLength="10"
+                    android:fontFamily="@font/alata"
+                    android:layout_height="wrap_content"
+                    android:hint="Enter your Phone Number "
+                    />
+            </com.google.android.material.textfield.TextInputLayout>
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 app:boxBackgroundColor="#fff"
@@ -92,6 +115,7 @@
                     android:layout_width="match_parent"
                     android:inputType="textEmailAddress"
                     android:textSize="12dp"
+                    android:id="@+id/Email"
                     android:fontFamily="@font/alata"
                     android:layout_height="wrap_content"
                     android:hint="Enter your Email Address"
@@ -114,6 +138,8 @@
                     android:layout_width="match_parent"
                     android:inputType="textPassword"
                     android:textSize="12dp"
+                    android:id="@+id/Password"
+                    android:maxLength="10"
                     android:fontFamily="@font/alata"
                     android:layout_height="wrap_content"
                     android:hint="Enter your Password"
@@ -136,6 +162,7 @@
                     android:layout_width="match_parent"
                     android:inputType="textPassword"
                     android:textSize="12dp"
+                    android:id="@+id/Repassword"
                     android:fontFamily="@font/alata"
                     android:layout_height="wrap_content"
                     android:hint="Confirm your Password"
@@ -147,7 +174,7 @@
                 <androidx.cardview.widget.CardView
                     android:layout_margin="25dp"
                     android:backgroundTint="#000000"
-                    android:id="@+id/getStarted"
+                    android:id="@+id/Register"
 
                     app:cardCornerRadius="5dp"
                     android:layout_width="match_parent"
@@ -191,6 +218,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center"
+                    android:id="@+id/SignIn"
                     android:textColor="#000"
                     android:fontFamily="@font/alata"
                     android:text=" Sign In" />
