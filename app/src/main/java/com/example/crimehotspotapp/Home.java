@@ -6,10 +6,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Context;
 import android.content.Intent;
@@ -29,6 +34,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.crimehotspotapp.Common.common;
+import com.example.crimehotspotapp.Interface.ItemClickListener;
+import com.example.crimehotspotapp.Model.Report;
+import com.example.crimehotspotapp.ViewHolder.ReportViewHolder;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -45,6 +54,13 @@ import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
 
 import io.paperdb.Paper;
 
@@ -52,17 +68,23 @@ public class Home extends FragmentActivity implements OnMapReadyCallback, Naviga
 
     Marker marker;
     TextView Firstname;
-
+    ArrayList<String> lat = new ArrayList<>();
+    ArrayList<String> log = new ArrayList<>();
     int AUTOCOMPLETE_REQUEST_CODE = 1;
     Location currentLocation;
     private GoogleMap mMap;
+    RecyclerView recyclerView;
 
+    public RecyclerView.LayoutManager layoutManager;
+    FirebaseRecyclerAdapter<Report, ReportViewHolder> adapter;
+
+    DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Report");
     FusedLocationProviderClient fusedLocationProviderClient;
     final int REQUEST_CODE = 101;
     SupportMapFragment supportMapFragment;
     private LocationManager locationManager;
     private TextView locationTextView;
-
+CardView fab;
     private ActivityHomeBinding binding;
 
     @Override
@@ -113,8 +135,43 @@ public class Home extends FragmentActivity implements OnMapReadyCallback, Naviga
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Home.this);
 
         fetchLastLocation();
+        instertvalues();
+        fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Home.this, com.example.crimehotspotapp.Report.class));
+            }
+        });
     }
 
+    private void instertvalues() {
+        recyclerView = findViewById(R.id.RecyclerItems);
+        recyclerView.setHasFixedSize(false);
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        adapter = new FirebaseRecyclerAdapter<Report, ReportViewHolder>(Report.class, R.layout.reportlayout, ReportViewHolder.class, reference.orderByChild("id").equalTo(Paper.book().read("UserID").toString())) {
+            @Override
+            protected void populateViewHolder(ReportViewHolder viewHolder, Report model, int position) {
+                lat.add(model.getLat());
+                log.add(model.getLog());
+
+                SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.map);
+                mapFragment.getMapAsync(Home.this);
+                fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(Home.this);
+
+                viewHolder.setItemClickListener(new ItemClickListener() {
+                    @Override
+                    public void onClick(View view, int Position, Boolean isLongClick) {
+
+                    }
+                });
+            }
+        };
+        adapter.notifyDataSetChanged();
+        recyclerView.setAdapter(adapter);
+    }
 
 
     private void fetchLastLocation() {
@@ -177,9 +234,9 @@ public class Home extends FragmentActivity implements OnMapReadyCallback, Naviga
 
 
         } else if (id == R.id.nav_List) {
-
+            startActivity(new Intent(Home.this, List.class));
         } else if (id == R.id.nav_Search) {
-
+            startActivity(new Intent(Home.this, Search.class));
         } else if (id == R.id.nav_Logout) {
             Paper.book().destroy();
             Intent i = new Intent(Home.this, SignIn.class);
@@ -202,16 +259,24 @@ public class Home extends FragmentActivity implements OnMapReadyCallback, Naviga
             fetchLastLocation();
             return;
         }
-        if (marker!=null){  // marker name is declared as a gloval variable.
+
+
+        for (int i = 0; i < lat.size(); i++) {
+            LatLng location = new LatLng(Double.parseDouble(lat.get(i)), Double.parseDouble(log.get(i)));
+            mMap.addCircle(new CircleOptions().center(location).radius(50).fillColor(android.R.color.holo_red_light).strokeColor(android.R.color.holo_red_light).strokeWidth(0));
+        }
+
+
+        if (marker != null) {  // marker name is declared as a gloval variable.
             marker.remove();
         }
         LatLng LatLog = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
-      //  marker = new MarkerOptions().position(LatLog).title("I Am Here .");
+        //  marker = new MarkerOptions().position(LatLog).title("I Am Here .");
         mMap.animateCamera(CameraUpdateFactory.newLatLng(LatLog));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLog,18));
-         marker = mMap.addMarker(new MarkerOptions().position(LatLog).title("I Am Here .").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLog, 18));
+        marker = mMap.addMarker(new MarkerOptions().position(LatLog).title("I Am Here .").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
 
-    //    mMap.addCircle(new CircleOptions().center(LatLog).radius(50).fillColor(android.R.color.holo_red_light).strokeColor(android.R.color.holo_red_light).strokeWidth(0));
+        //
 
     }
 
@@ -219,20 +284,296 @@ public class Home extends FragmentActivity implements OnMapReadyCallback, Naviga
     public void onLocationChanged(Location location) {
         // Called when the location has changed
         fetchLastLocation();
-       // locationTextView.setText("Latitude: " + location.getLatitude() + "\nLongitude: " + location.getLongitude());
+        // locationTextView.setText("Latitude: " + location.getLatitude() + "\nLongitude: " + location.getLongitude());
         //here we update the location on the map
 
         LatLng myActualLocation = new LatLng(location.getLatitude(), location.getLongitude());
+        Intent serviceIntent = new Intent(Home.this, MyBackgroundService.class);
+        startService(serviceIntent);
 
-        if (marker!=null){  // marker name is declared as a gloval variable.
+        if (marker != null) {  // marker name is declared as a gloval variable.
             marker.remove();
         }
 
         marker = mMap.addMarker(new MarkerOptions().position(myActualLocation).title("I Am Here .").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)));
-   mMap.animateCamera(CameraUpdateFactory.newLatLng(myActualLocation));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myActualLocation,18));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(myActualLocation));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myActualLocation, 18));
+
+        currentLocation = location;
+
+        DatabaseReference reference1 = FirebaseDatabase.getInstance().getReference("Report");
+        reference1.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Report report = snapshot.getValue(Report.class);
+
+                float location = DistanceCalculator.calculateDistance(currentLocation.getLatitude(), currentLocation.getLongitude(),
+                        Double.parseDouble(report.getLat()), Double.parseDouble(report.getLog()));
+                 if (location > 800 && location < 10000) {
+                    NotificationHelper.createNotificationChannel(Home.this);
+                    NotificationHelper.showNotification(Home.this,"They has been a "+report.getCrime() + " in " + report.getCity() + "Just 1 km from your Location");
+            }
+                if (location >400 && location < 700) {
+
+                    NotificationHelper.createNotificationChannel(Home.this);
+                    NotificationHelper.showNotification(Home.this,"They has been a "+report.getCrime() + " in " + report.getCity() + "Just Less Than 600 Meters  from your Location");
 
 
+                }
+                if (location < 200) {
+                    NotificationHelper.createNotificationChannel(Home.this);
+                    NotificationHelper.showNotification(Home.this,"They has been a "+report.getCrime() + " in " + report.getCity() + " Please be  Vigilant");
+
+                }
+
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Report report = snapshot.getValue(Report.class);
+
+                float location = DistanceCalculator.calculateDistance(currentLocation.getLatitude(), currentLocation.getLongitude(),
+                        Double.parseDouble(report.getLat()), Double.parseDouble(report.getLog()));
+                if (location > 800 && location < 10000) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just 1 km from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location >400 && location < 700) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just Less Than 600 Meters  from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location < 200) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + " Please be  Vigilant");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+                Report report = snapshot.getValue(Report.class);
+
+                float location = DistanceCalculator.calculateDistance(currentLocation.getLatitude(), currentLocation.getLongitude(),
+                        Double.parseDouble(report.getLat()), Double.parseDouble(report.getLog()));
+                if (location > 800 && location < 10000) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just 1 km from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location >400 && location < 700) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just Less Than 600 Meters  from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location < 200) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + " Please be  Vigilant");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                Report report = snapshot.getValue(Report.class);
+
+                float location = DistanceCalculator.calculateDistance(currentLocation.getLatitude(), currentLocation.getLongitude(),
+                        Double.parseDouble(report.getLat()), Double.parseDouble(report.getLog()));
+                if (location > 800 && location < 10000) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just 1 km from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location >400 && location < 700) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + "Just Less Than 600 Meters  from your Location");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+                if (location < 200) {
+
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(Home.this)
+                            .setSmallIcon(R.drawable.ic_baseline_security_24)
+                            .setContentTitle("Be On Alert")
+                            .setContentText("They has been a "+report.getCrime() + " in " + report.getCity() + " Please be  Vigilant");
+
+
+                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(Home.this);
+
+                    if (ActivityCompat.checkSelfPermission(Home.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    notificationManager.notify(1, builder.build());
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 
     @Override

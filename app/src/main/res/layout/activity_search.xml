@@ -13,17 +13,38 @@
 
         <androidx.appcompat.widget.Toolbar
 
-            app:titleTextColor="#fff"
+            app:title="Search using Town"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:title="Search For Reports"/>
+
+            app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </com.google.android.material.appbar.AppBarLayout>
-    <androidx.recyclerview.widget.RecyclerView
-        android:layout_width="match_parent"
+    <LinearLayout
         android:layout_below="@id/toolbar"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
         android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-    </androidx.recyclerview.widget.RecyclerView>
+            <EditText
+
+                android:id="@+id/Search"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/RecyclerItems"
+            android:layout_margin="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        </androidx.recyclerview.widget.RecyclerView>
+
+    </LinearLayout>
 </RelativeLayout>
