@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "21025639739",
+    "project_id": "crime-hotspot-app",
+    "storage_bucket": "crime-hotspot-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:21025639739:android:d2c2e80028be5f76d17b1e",
+        "android_client_info": {
+          "package_name": "com.example.crimehotspotapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "21025639739-s7tkou8hfhv01uv11b2fm4j6bq65umjt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJdH2vPUuEimXUrTCIB3c4nptuEy2S_b8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "21025639739-s7tkou8hfhv01uv11b2fm4j6bq65umjt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
